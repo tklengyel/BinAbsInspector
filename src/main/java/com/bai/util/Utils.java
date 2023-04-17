@@ -8,10 +8,8 @@ import com.bai.env.KSet;
 import com.bai.env.funcs.FunctionModelManager;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import generic.continues.RethrowContinuesFactory;
 import ghidra.app.cmd.function.ApplyFunctionSignatureCmd;
 import ghidra.app.util.bin.MemoryByteProvider;
-import ghidra.app.util.bin.format.elf.ElfException;
 import ghidra.app.util.bin.format.elf.ElfHeader;
 import ghidra.app.util.bin.format.pe.PortableExecutable;
 import ghidra.app.util.bin.format.pe.OptionalHeader;
@@ -357,7 +355,7 @@ public class Utils {
             
             switch (executableFormat) {
                 case ElfLoader.ELF_NAME: {
-                    ElfHeader header = ElfHeader.createElfHeader(RethrowContinuesFactory.INSTANCE, provider);
+                    ElfHeader header = new ElfHeader(provider, x -> {});
                     entryAddress = GlobalState.flatAPI.toAddr(header.e_entry());
                     if (entryAddress.subtract(GlobalState.currentProgram.getImageBase()) < 0) {
                         // handle PIE ELF with non-zero base address
@@ -367,8 +365,7 @@ public class Utils {
                 break;
 
                 case PeLoader.PE_NAME: {
-                    PortableExecutable pe = PortableExecutable.createPortableExecutable(
-                            RethrowContinuesFactory.INSTANCE, provider, PortableExecutable.SectionLayout.MEMORY);
+                    PortableExecutable pe = new PortableExecutable(provider, PortableExecutable.SectionLayout.MEMORY);
                     OptionalHeader header = pe.getNTHeader().getOptionalHeader();
                     entryAddress = GlobalState.flatAPI.toAddr(header.getAddressOfEntryPoint());
                     entryAddress = entryAddress.add(GlobalState.currentProgram.getImageBase().getOffset());
